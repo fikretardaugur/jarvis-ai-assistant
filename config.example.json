@@ -1,0 +1,16 @@
+{
+  "aiProvider": "hybrid",
+  "geminiApiKey": "BURAYA_GEMINI_API_ANAHTARINIZ",
+  "geminiModel": "gemini-3.5-flash-lite",
+  "telegramBotToken": "",
+  "telegramAllowedChatId": "",
+  "gmailAddress": "",
+  "gmailAppPassword": "",
+  "smsWebhookUrl": "",
+  "weatherCity": "İstanbul",
+  "cloudUrl": "",
+  "cloudSecret": "",
+  "userName": "Efendim",
+  "voiceEnabled": true,
+  "voiceProfile": "jarvis-ahmet"
+}

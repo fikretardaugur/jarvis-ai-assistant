@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#030914" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>J.A.R.V.I.S. Mark VII — Stark Industries OS</title>
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <!-- Background HUD Grid & Scanline Overlay -->
+  <div class="hud-bg-grid"></div>
+  <div class="hud-vignette"></div>
+
+  <!-- Top Telemetry & Status Header -->
+  <header class="hud-header">
+    <div class="brand-block">
+      <div class="arc-mini-icon"></div>
+      <div>
+        <div class="brand-title">J.A.R.V.I.S. <span class="badge-mk">MK-VII</span></div>
+        <div class="brand-sub" id="activeWindowSub">STARK INDUSTRIES // SİSTEM ÇEVRİMİÇİ</div>
+      </div>
+    </div>
+
+    <div class="header-metrics">
+      <div class="metric-pill" title="İşlemci Yükü">
+        <span class="m-label">CPU</span>
+        <span class="m-val" id="hdrCpu">0%</span>
+      </div>
+      <div class="metric-pill" title="Bellek Kullanımı">
+        <span class="m-label">RAM</span>
+        <span class="m-val" id="hdrRam">0%</span>
+      </div>
+      <div class="metric-pill" title="Ses Seviyesi">
+        <span class="m-label">SES</span>
+        <span class="m-val" id="hdrVol">50%</span>
+      </div>
+      <div class="metric-pill" title="Pil Durumu">
+        <span class="m-label">GÜÇ</span>
+        <span class="m-val" id="hdrBat">100%</span>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button class="hud-icon-btn" id="btnToggleVoice" title="Sesli Yanıt Aç/Kapat">🔊</button>
+      <button class="hud-icon-btn" id="btnShowQr" title="Telefon Bağlantı QR Kodu">📱</button>
+    </div>
+  </header>
+
+  <!-- Main Workspace Container -->
+  <main class="hud-main">
+    <!-- TAB 1: JARVIS CORE (HUD & VOICE ASSISTANT) -->
+    <section class="tab-panel active" id="tab-core">
+      <div class="core-layout">
+        <!-- Left / Top: Arc Reactor & Telemetry Rings -->
+        <div class="reactor-panel hud-card">
+          <div class="card-corner tl"></div><div class="card-corner tr"></div>
+          <div class="card-corner bl"></div><div class="card-corner br"></div>
+
+          <div class="reactor-header">
+            <span class="hud-tag">ARC REACTOR CORE // SESLİ KONTROL</span>
+            <span class="conn-dot online" id="connStatus">BAĞLI</span>
+          </div>
+
+          <!-- Interactive Arc Reactor Button -->
+          <div class="arc-reactor-wrapper" id="arcReactorBtn" title="Konuşmak için dokunun">
+            <svg class="arc-svg" viewBox="0 0 260 260">
+              <defs>
+                <radialGradient id="coreGlow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stop-color="#e0ffff" stop-opacity="1" />
+                  <stop offset="45%" stop-color="#00f0ff" stop-opacity="0.85" />
+                  <stop offset="100%" stop-color="#0051ff" stop-opacity="0" />
+                </radialGradient>
+              </defs>
+              <!-- Outer Dashed Ring -->
+              <circle class="ring-outer" cx="130" cy="130" r="118" fill="none" stroke="#00f0ff" stroke-width="1.5" stroke-dasharray="14 8 4 8" opacity="0.55" />
+              <!-- Secondary Counter-Rotating Ring -->
+              <circle class="ring-mid" cx="130" cy="130" r="102" fill="none" stroke="#00f0ff" stroke-width="2.5" stroke-dasharray="45 20 15 20" opacity="0.75" />
+              <!-- Segmented Coil Ring -->
+              <circle class="ring-coil" cx="130" cy="130" r="84" fill="none" stroke="#38bdf8" stroke-width="6" stroke-dasharray="12 10" opacity="0.85" />
+              <!-- Inner Gold/Cyan Accent Ring -->
+              <circle class="ring-inner" cx="130" cy="130" r="66" fill="none" stroke="#f59e0b" stroke-width="2" stroke-dasharray="28 14" opacity="0.8" />
+              <!-- Center Core Glow -->
+              <circle class="core-center" cx="130" cy="130" r="46" fill="url(#coreGlow)" />
+              <circle cx="130" cy="130" r="24" fill="none" stroke="#ffffff" stroke-width="1.5" opacity="0.9" />
+            </svg>
+            <div class="reactor-center-label" id="reactorLabel">DOKUN &amp; KONUŞ</div>
+          </div>
+
+          <div class="voice-status-text" id="voiceStatusText">
+            "Sesi %50 yap", "Ekran görüntüsü al" veya "YouTube'u aç" diyebilirsiniz.
+          </div>
+
+          <div class="voice-controls-row">
+            <button class="hud-btn primary" id="btnMicTrigger">
+              🎤 Bas Konuş
+            </button>
+            <button class="hud-btn" id="btnWakeWord">
+              👂 "Hey Jarvis": Kapalı
+            </button>
+          </div>
+
+          <div class="inline-form" style="width:100%;margin-top:4px;">
+            <select id="quickVoiceSelect" class="hud-select" style="flex:1;" onchange="changeVoiceProfile(this.value)" title="JARVIS Ses Tonunu Seçin">
+              <option value="jarvis-ahmet">🎙️ J.A.R.V.I.S. (Karizmatik Erkek)</option>
+              <option value="jarvis-deep">🦾 Mark VII Zırh Sesi (Kalın Erkek)</option>
+              <option value="jarvis-fast">⚡ Taktiksel Asistan (Hızlı Erkek)</option>
+              <option value="friday-emel">👩‍💻 F.R.I.D.A.Y. (Doğal Kadın Sesi)</option>
+              <option value="friday-soft">✨ F.R.I.D.A.Y. Sakin (Yumuşak Kadın)</option>
+            </select>
+            <button class="hud-btn small" onclick="testCurrentVoice()" title="Seçili sesi dinle">🔊 Dinle</button>
+          </div>
+
+          <div class="inline-form" style="width:100%;margin-top:6px;gap:6px;flex-wrap:wrap;">
+            <button class="hud-btn small" id="btnEnrollVoice" onclick="enrollUserVoice()" style="flex:1;" title="4 saniye konuşarak kendi ses izini kaydet">🧬 Sesimi Tanıt</button>
+            <button class="hud-btn small" id="btnToggleVoiceLock" onclick="toggleVoiceLock()" style="flex:1;" title="Sadece kayıtlı sesin komut vermesine izin ver">🔓 Ses Kilidi: Kapalı</button>
+            <select id="voiceStrictness" class="hud-select" style="display:none;" onchange="setVoiceStrictness(this.value)" title="Ses doğrulama hassasiyeti">
+              <option value="strict">Sıkı</option>
+              <option value="normal" selected>Normal</option>
+              <option value="loose">Esnek</option>
+            </select>
+            <button class="hud-btn small" id="btnClearVoicePrint" onclick="clearVoicePrint()" title="Kayıtlı ses izini sil" style="display:none;">🗑️</button>
+          </div>
+          <div id="voiceLockStatus" style="font-size:11px;color:#8aa4c8;margin-top:4px;text-align:center;">Ses izi kayıtlı değil — herkes komut verebilir.</div>
+
+          <!-- Live Telemetry Bars inside Reactor Card -->
+          <div class="telemetry-mini-grid">
+            <div class="t-item">
+              <div class="t-row"><span>CPU YÜKÜ</span><strong id="tCpu">0%</strong></div>
+              <div class="t-bar"><div class="t-fill" id="barCpu" style="width:0%"></div></div>
+            </div>
+            <div class="t-item">
+              <div class="t-row"><span>RAM BELLEK</span><strong id="tRam">0 / 0 GB</strong></div>
+              <div class="t-bar"><div class="t-fill" id="barRam" style="width:0%"></div></div>
+            </div>
+            <div class="t-item">
+              <div class="t-row"><span>DİSK (C:)</span><strong id="tDisk">0%</strong></div>
+              <div class="t-bar"><div class="t-fill" id="barDisk" style="width:0%"></div></div>
+            </div>
+            <div class="t-item">
+              <div class="t-row"><span>AKTİF PENCERE</span><strong id="tWin" class="truncate">Masaüstü</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right / Bottom: Conversation Stream & Command Input -->
+        <div class="chat-panel hud-card">
+          <div class="card-corner tl"></div><div class="card-corner tr"></div>
+          <div class="card-corner bl"></div><div class="card-corner br"></div>
+
+          <div class="panel-header">
+            <span class="hud-tag">İLETİŞİM GÜNLÜĞÜ // DOĞAL DİL KOMUT HATTI</span>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <span class="hud-sub-tag" id="aiEngineBadge">HİBRİT ZEKÂ AKTİF</span>
+              <button class="hud-btn small" onclick="sendJarvisCommand('Sohbeti temizle')" title="Tüm eski konuşmaları sil">🗑️ Temizle</button>
+            </div>
+          </div>
+
+          <!-- Quick Action Chips -->
+          <div class="quick-chips">
+            <button class="chip" data-cmd="Sistem durumu nedir?">📊 Sistem Raporu</button>
+            <button class="chip" data-cmd="Ekran görüntüsü al">🖥️ Ekranı Göster</button>
+            <button class="chip" data-cmd="Kameradan fotoğraf çek">📷 Kamera Çek</button>
+            <button class="chip" data-cmd="Güvenlik alarmı aç">🚨 Alarmı Kur</button>
+            <button class="chip" data-cmd="Sistem temizliği">🧹 Sistem Temizle</button>
+            <button class="chip" data-cmd="Sesi yüzde 50 yap">🔊 Ses %50</button>
+            <button class="chip" data-cmd="Masaüstünü göster">🔽 Masaüstü</button>
+            <button class="chip" data-cmd="YouTube'u aç">▶️ YouTube</button>
+            <button class="chip" data-cmd="Sohbeti temizle">🗑️ Sohbeti Temizle</button>
+          </div>
+
+          <!-- Chat Messages Container -->
+          <div class="chat-stream" id="chatStream"></div>
+
+          <!-- Command Input Bar -->
+          <form class="command-form" id="commandForm">
+            <input
+              type="text"
+              id="commandInput"
+              class="hud-input"
+              placeholder="JARVIS'e emir verin veya soru sorun... (Örn: YouTube'da Barış Özcan ara)"
+              autocomplete="off"
+            />
+            <button type="submit" class="hud-btn primary">GÖNDER</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: PC REMOTE CONTROL (KUMANDA) -->
+    <section class="tab-panel" id="tab-remote">
+      <div class="remote-grid">
+        <!-- Audio & Media Deck -->
+        <div class="hud-card">
+          <div class="panel-header">
+            <span class="hud-tag">SES &amp; MEDYA KONTROL MERKEZİ</span>
+            <span id="volLabelBig" class="accent-val">50%</span>
+          </div>
+
+          <div class="volume-slider-wrap">
+            <button class="hud-btn" onclick="doAction('adjust_volume', {delta: -10})">🔉 -10</button>
+            <input type="range" id="volSlider" min="0" max="100" value="50" class="hud-range" />
+            <button class="hud-btn" onclick="doAction('adjust_volume', {delta: 10})">🔊 +10</button>
+          </div>
+
+          <div class="media-btn-row">
+            <button class="hud-btn" onclick="doAction('media_control', {command:'prev'})">⏮️ Önceki</button>
+            <button class="hud-btn primary" onclick="doAction('media_control', {command:'play_pause'})">⏯️ Oynat / Duraklat</button>
+            <button class="hud-btn" onclick="doAction('media_control', {command:'next'})">⏭️ Sonraki</button>
+            <button class="hud-btn danger" onclick="doAction('toggle_mute', {})">🔇 Sessiz</button>
+          </div>
+
+          <div class="divider"></div>
+          <div class="panel-header">
+            <span class="hud-tag">EKRAN PARLAKLIĞI KONTROLÜ</span>
+            <span id="brightLabelBig" class="accent-val">80%</span>
+          </div>
+          <div class="volume-slider-wrap">
+            <button class="hud-btn" onclick="doAction('set_brightness', {level: 20})">🔅 %20</button>
+            <input type="range" id="brightSlider" min="0" max="100" value="80" class="hud-range" />
+            <button class="hud-btn" onclick="doAction('set_brightness', {level: 100})">🔆 %100</button>
+          </div>
+
+          <div class="divider"></div>
+          <div class="panel-header">
+            <span class="hud-tag">BİLGİSAYARDAN SESLİ ANONS (TTS) &amp; PANO</span>
+          </div>
+          <div class="inline-form">
+            <input type="text" id="pcSpeakInput" class="hud-input" placeholder="Hoparlörden söylet veya PC panosuna kopyala..." />
+            <button class="hud-btn" onclick="speakOnPC()">📢 Söylet</button>
+            <button class="hud-btn" onclick="copyToPCClipboard()">📋 Kopyala</button>
+            <button class="hud-btn" onclick="readPCClipboard()">📥 Oku</button>
+          </div>
+        </div>
+
+        <!-- Quick Application & Web Launcher -->
+        <div class="hud-card">
+          <div class="panel-header">
+            <span class="hud-tag">UYGULAMA &amp; PLATFORM BAŞLATICI</span>
+          </div>
+          <div class="app-launcher-grid">
+            <button class="app-tile" onclick="doAction('open_app', {app:'youtube'})">
+              <span class="app-ico">▶️</span><span>YouTube</span>
+            </button>
+            <button class="app-tile" onclick="doAction('open_app', {app:'chrome'})">
+              <span class="app-ico">🌐</span><span>Tarayıcı</span>
+            </button>
+            <button class="app-tile" onclick="doAction('open_app', {app:'spotify'})">
+              <span class="app-ico">🎵</span><span>Spotify</span>
+            </button>
+            <button class="app-tile" onclick="doAction('open_app', {app:'whatsapp'})">
+              <span class="app-ico">💬</span><span>WhatsApp</span>
+            </button>
+            <button class="app-tile" onclick="doAction('open_app', {app:'vscode'})">
+              <span class="app-ico">💻</span><span>VS Code</span>
+            </button>
+            <button class="app-tile" onclick="doAction('open_app', {app:'explorer'})">
+              <span class="app-ico">📁</span><span>Dosyalar</span>
+            </button>
+            <button class="app-tile" onclick="doAction('open_app', {app:'calculator'})">
+              <span class="app-ico">🧮</span><span>Hesap M.</span>
+            </button>
+            <button class="app-tile" onclick="doAction('open_app', {app:'notepad'})">
+              <span class="app-ico">📝</span><span>Not Defteri</span>
+            </button>
+            <button class="app-tile" onclick="doAction('open_app', {app:'taskmgr'})">
+              <span class="app-ico">📈</span><span>Görev Yön.</span>
+            </button>
+            <button class="app-tile" onclick="doAction('open_app', {app:'netflix'})">
+              <span class="app-ico">🎬</span><span>Netflix</span>
+            </button>
+            <button class="app-tile" onclick="doAction('open_app', {app:'chatgpt'})">
+              <span class="app-ico">🤖</span><span>ChatGPT</span>
+            </button>
+            <button class="app-tile" onclick="doAction('open_app', {app:'settings'})">
+              <span class="app-ico">⚙️</span><span>Ayarlar</span>
+            </button>
+          </div>
+
+          <div class="inline-form" style="margin-top:10px;">
+            <input type="text" id="quickSearchInput" class="hud-input" placeholder="YouTube / Google araması veya URL..." />
+            <button class="hud-btn" onclick="quickSearch('youtube')">YouTube</button>
+            <button class="hud-btn" onclick="quickSearch('google')">Google</button>
+          </div>
+        </div>
+
+        <!-- Window & Power Protocols -->
+        <div class="hud-card">
+          <div class="panel-header">
+            <span class="hud-tag">GÜVENLİK, KAMERA &amp; GÜÇ PROTOKOLLERİ</span>
+          </div>
+          <div class="protocol-grid">
+            <button class="hud-btn primary" onclick="captureWebcamToScreen()">📷 Webcam Fotoğraf Çek</button>
+            <button class="hud-btn warn" onclick="doAction('toggle_sentry', {enable:true})">🚨 Hırsız Alarmını Kur</button>
+            <button class="hud-btn" onclick="doAction('toggle_sentry', {enable:false})">🛡️ Alarmı Devre Dışı Bırak</button>
+            <button class="hud-btn" onclick="doAction('system_cleanup', {})">🧹 Sistem &amp; Temp Temizle</button>
+            <button class="hud-btn primary" onclick="doAction('system_control', {command:'wake'})">☀️ Bilgisayarı Uyandır</button>
+            <button class="hud-btn warn" onclick="doAction('system_control', {command:'sleep'})">🌙 Uyku Moduna Al</button>
+            <button class="hud-btn" onclick="doAction('system_control', {command:'show_desktop'})">🔽 Masaüstünü Göster</button>
+            <button class="hud-btn" onclick="doAction('system_control', {command:'alt_tab'})">🔄 Pencere Değiştir (Alt+Tab)</button>
+            <button class="hud-btn" onclick="doAction('system_control', {command:'close_window'})">✖️ Aktif Pencereyi Kapat</button>
+            <button class="hud-btn warn" onclick="doAction('system_control', {command:'lock'})">🔒 Bilgisayarı Kilitle</button>
+            <button class="hud-btn danger" onclick="confirmShutdown()">⚡ Zamanlı Kapat (60 sn)</button>
+            <button class="hud-btn primary" onclick="doAction('system_control', {command:'cancel_shutdown'})">🛡️ Kapatmayı İptal Et</button>
+          </div>
+        </div>
+
+        <!-- Running Processes Manager -->
+        <div class="hud-card">
+          <div class="panel-header">
+            <span class="hud-tag">AÇIK UYGULAMALAR &amp; İŞLEM YÖNETİCİSİ</span>
+            <button class="hud-btn small" onclick="loadProcesses()">🔄 Yenile</button>
+          </div>
+          <div class="process-list" id="processList">
+            <div class="empty-hint">Açık işlemleri görmek için Yenile'ye dokunun.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: LIVE SCREEN & REMOTE MOUSE/KEYBOARD -->
+    <section class="tab-panel" id="tab-screen">
+      <div class="hud-card screen-card">
+        <div class="panel-header">
+          <span class="hud-tag">CANLI BİLGİSAYAR EKRANI &amp; WEBCAM KONTROL</span>
+          <div class="screen-controls">
+            <button class="hud-btn small primary" onclick="refreshScreen()">📸 Ekranı Çek</button>
+            <button class="hud-btn small warn" onclick="captureWebcamToScreen()">📷 Kamera Çek</button>
+            <button class="hud-btn small" id="btnLiveStream" onclick="toggleLiveStream()">▶️ Canlı Akış: Kapalı</button>
+            <select id="clickModeSelect" class="hud-select">
+              <option value="left">👆 Dokununca: Sol Tık</option>
+              <option value="double">👆👆 Dokununca: Çift Tık</option>
+              <option value="right">👉 Dokununca: Sağ Tık</option>
+              <option value="none">👁️ Sadece İzle</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Interactive Screen Canvas Container -->
+        <div class="screen-viewport" id="screenViewport">
+          <img id="liveScreenImg" alt="Bilgisayar Ekranı" src="" style="display:none;" />
+          <div id="screenPlaceholder" class="screen-placeholder">
+            <p>🖥️ Bilgisayar ekranını telefonunuzda görmek ve dokunarak tıklamak için <strong>"📸 Yenile"</strong> veya <strong>"▶️ Canlı Akış"</strong> butonuna dokunun.</p>
+            <button class="hud-btn primary" onclick="refreshScreen()">Ekranı Şimdi Getir</button>
+          </div>
+          <div id="clickRipple" class="click-ripple"></div>
+        </div>
+
+        <!-- Remote Keyboard & Scroll Bar -->
+        <div class="remote-input-bar">
+          <div class="inline-form">
+            <input type="text" id="remoteTypeInput" class="hud-input" placeholder="Bilgisayara yazılacak metin..." />
+            <button class="hud-btn primary" onclick="sendRemoteText(true)">Yaz + Enter</button>
+            <button class="hud-btn" onclick="sendRemoteText(false)">Sadece Yaz</button>
+          </div>
+          <div class="key-deck">
+            <button class="hud-btn small" onclick="doAction('send_key', {key:'enter'})">⏎ Enter</button>
+            <button class="hud-btn small" onclick="doAction('send_key', {key:'backspace'})">⌫ Sil</button>
+            <button class="hud-btn small" onclick="doAction('send_key', {key:'space'})">␣ Boşluk</button>
+            <button class="hud-btn small" onclick="doAction('send_key', {key:'escape'})">Esc</button>
+            <button class="hud-btn small" onclick="doAction('send_key', {key:'tab'})">Tab</button>
+            <button class="hud-btn small" onclick="doAction('mouse_scroll', {delta: 400})">⬆️ Yukarı Kaydır</button>
+            <button class="hud-btn small" onclick="doAction('mouse_scroll', {delta: -400})">⬇️ Aşağı Kaydır</button>
+            <button class="hud-btn small" onclick="doAction('send_key', {key:'f11'})">⛶ Tam Ekran</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: FILE EXPLORER & TRANSFER -->
+    <section class="tab-panel" id="tab-files">
+      <div class="hud-card">
+        <div class="panel-header">
+          <span class="hud-tag">DOSYA YÖNETİCİSİ &amp; TELEFON-PC TRANSFER</span>
+          <label class="hud-btn small primary" style="cursor:pointer;">
+            📤 Telefondan PC'ye Dosya Gönder
+            <input type="file" id="fileUploadInput" style="display:none;" onchange="uploadFileToPC(this)" />
+          </label>
+        </div>
+
+        <div class="quick-chips" id="folderShortcuts">
+          <button class="chip" onclick="browseShortcut('desktop')">🖥️ Masaüstü</button>
+          <button class="chip" onclick="browseShortcut('downloads')">📥 İndirilenler</button>
+          <button class="chip" onclick="browseShortcut('documents')">📄 Belgeler</button>
+          <button class="chip" onclick="browseShortcut('transfers')">📲 JARVIS Transfer</button>
+          <button class="chip" onclick="browseShortcut('home')">🏠 Kullanıcı Dizini</button>
+        </div>
+
+        <div class="path-bar">
+          <button class="hud-btn small" onclick="browseParent()">⬅️ Üst Klasör</button>
+          <div class="current-path" id="currentPathLabel">C:\</div>
+        </div>
+
+        <div class="file-list" id="fileListContainer"></div>
+      </div>
+    </section>
+
+    <!-- TAB 5: REMOTE POWERSHELL TERMINAL -->
+    <section class="tab-panel" id="tab-terminal">
+      <div class="hud-card terminal-card">
+        <div class="panel-header">
+          <span class="hud-tag">UZAKTAN POWERSHELL TERMİNALİ</span>
+          <span class="hud-sub-tag" id="termCwdLabel">PS C:\&gt;</span>
+        </div>
+
+        <div class="quick-chips">
+          <button class="chip" onclick="runQuickTerm('ipconfig')">🌐 ipconfig</button>
+          <button class="chip" onclick="runQuickTerm('Get-Process | Sort-Object CPU -Descending | Select-Object -First 15 Name, Id, CPU, WorkingSet')">⚙️ En Çok CPU Kullananlar</button>
+          <button class="chip" onclick="runQuickTerm('Get-PSDrive -PSProvider FileSystem')">💾 Disk Durumu</button>
+          <button class="chip" onclick="runQuickTerm('netstat -ano | Select-Object -First 25')">🔌 Ağ Portları</button>
+          <button class="chip" onclick="runQuickTerm('dir')">📂 Klasör İçeriği</button>
+          <button class="chip" onclick="clearTerm()">🧹 Temizle</button>
+        </div>
+
+        <pre class="terminal-output" id="terminalOutput">J.A.R.V.I.S. PowerShell Terminali Hazır. Komut girin...</pre>
+
+        <form class="command-form" id="terminalForm">
+          <input type="text" id="terminalInput" class="hud-input mono" placeholder="PowerShell komutu yazın... (Örn: dir, ipconfig, winget list)" autocomplete="off" />
+          <button type="submit" class="hud-btn primary">ÇALIŞTIR</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- TAB 6: NOTES, PHONE PAIRING QR & SETTINGS -->
+    <section class="tab-panel" id="tab-settings">
+      <div class="remote-grid">
+        <!-- Phone QR Connection Card -->
+        <div class="hud-card">
+          <div class="panel-header">
+            <span class="hud-tag">📱 TELEFONDAN BAĞLANTI &amp; QR KOD</span>
+          </div>
+          <div class="qr-box-layout">
+            <div class="qr-canvas-wrap" id="qrContainer"></div>
+            <div class="qr-info">
+              <p>Telefonunuz bilgisayarınızla aynı Wi-Fi ağındayken kameranızla QR kodu okutun veya aşağıdaki adresi telefon tarayıcınıza yazın:</p>
+              <div class="lan-url-box" id="lanUrlBox">http://192.168.1.x:7777</div>
+              <p class="small-hint">💡 İpucu: Telefonda sayfayı açtıktan sonra tarayıcı menüsünden <strong>"Ana Ekrana Ekle"</strong> diyerek JARVIS'i gerçek bir mobil uygulama gibi tam ekran kullanabilirsiniz.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notes & Reminders Manager -->
+        <div class="hud-card">
+          <div class="panel-header">
+            <span class="hud-tag">📝 JARVIS NOTLAR &amp; GÖREVLER</span>
+          </div>
+          <div class="inline-form">
+            <input type="text" id="newNoteInput" class="hud-input" placeholder="Yeni not veya görev ekle..." />
+            <button class="hud-btn primary" onclick="addNoteUI()">Ekle</button>
+          </div>
+          <div class="notes-list" id="notesListContainer"></div>
+        </div>
+
+        <!-- AI Brain & Security Settings -->
+        <div class="hud-card">
+          <div class="panel-header">
+            <span class="hud-tag">🧠 YAPAY ZEKA, TELEGRAM &amp; GÜVENLİK AYARLARI</span>
+          </div>
+          <div class="settings-form">
+            <label>Google Gemini Pro Üyeliği (Doğrudan Tarayıcı Girişi)</label>
+            <a href="/api/auth/google" class="hud-btn primary" style="text-align:center;text-decoration:none;display:block;">🔐 Google Hesabımla Giriş Yap (Gemini Pro)</a>
+
+            <label>Hitap Şekli (JARVIS size nasıl seslensin?)</label>
+            <input type="text" id="cfgUserName" class="hud-input" placeholder="Efendim / Patron / Tony" />
+
+            <label>JARVIS Ses Tonu (Nöral Stüdyo Sesi)</label>
+            <select id="cfgVoiceProfile" class="hud-select" onchange="changeVoiceProfile(this.value)">
+              <option value="jarvis-ahmet">🎙️ J.A.R.V.I.S. (Karizmatik Erkek — Sinematik)</option>
+              <option value="jarvis-deep">🦾 Mark VII Zırh Sesi (Kalın &amp; Otoriter Erkek)</option>
+              <option value="jarvis-fast">⚡ Taktiksel Asistan (Hızlı &amp; Dinamik Erkek)</option>
+              <option value="friday-emel">👩‍💻 F.R.I.D.A.Y. (Doğal Kadın Asistan Sesi)</option>
+              <option value="friday-soft">✨ F.R.I.D.A.Y. Sakin (Yumuşak Kadın Sesi)</option>
+            </select>
+
+            <label>Gemini API Anahtarı (İsteğe Bağlı — Sınırsız Doğal Sohbet İçin)</label>
+            <input type="password" id="cfgGeminiKey" class="hud-input" placeholder="AIzaSy... (Boş bırakılırsa yerleşik akıllı motor çalışır)" />
+
+            <label>Telegram Bot Token (İsteğe Bağlı — Ev Dışından Kontrol İçin)</label>
+            <input type="password" id="cfgTelegramToken" class="hud-input" placeholder="123456:ABC-DEF... (@BotFather'dan alınır)" />
+
+            <label>Gmail Adresi (Mail Kontrolü ve Gönderimi İçin)</label>
+            <input type="email" id="cfgGmailAddress" class="hud-input" placeholder="ornek@gmail.com" />
+
+            <label>Gmail Uygulama Şifresi (16 haneli App Password)</label>
+            <div class="inline-form" style="gap:6px;">
+              <input type="password" id="cfgGmailAppPassword" class="hud-input" style="flex:1;" placeholder="abcd efgh ijkl mnop" />
+              <button class="hud-btn small" type="button" onclick="testGmailUI()" title="Gmail IMAP bağlantısını test et">📧 Test Et</button>
+            </div>
+            <div id="gmailTestStatus" style="font-size:11px;color:#8aa4c8;margin-bottom:6px;"></div>
+
+            <label>Android SMS (MacroDroid Webhook URL)</label>
+            <input type="text" id="cfgSmsWebhookUrl" class="hud-input" placeholder="https://trigger.macrodroid.com/xxxx/jarvis_sms" />
+
+            <label>SMS Hızlı Rehber (Her satıra: İsim=0532...)</label>
+            <textarea id="cfgSmsContacts" class="hud-input" rows="2" placeholder="Annem=05321234567&#10;Ahmet=05559876543" style="resize:vertical;min-height:48px;"></textarea>
+
+            <label>Hava Durumu Şehri (Boş bırakılırsa otomatik algılanır)</label>
+            <input type="text" id="cfgWeatherCity" class="hud-input" placeholder="Örn: İstanbul, Ankara, İzmir..." />
+
+            <label>Güvenlik PIN Kodu (İsteğe Bağlı)</label>
+            <input type="password" id="cfgPinCode" class="hud-input" placeholder="Boş bırakılırsa şifresiz açılır" />
+
+            <button class="hud-btn primary" style="margin-top:8px;" onclick="saveSettingsUI()">💾 Ayarları Kaydet</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Bottom Navigation Dock (Mobile & Desktop) -->
+  <nav class="hud-nav">
+    <button class="nav-btn active" data-tab="tab-core">
+      <span class="nav-ico">💠</span>
+      <span class="nav-txt">JARVIS</span>
+    </button>
+    <button class="nav-btn" data-tab="tab-remote">
+      <span class="nav-ico">🎛️</span>
+      <span class="nav-txt">KUMANDA</span>
+    </button>
+    <button class="nav-btn" data-tab="tab-screen">
+      <span class="nav-ico">🖥️</span>
+      <span class="nav-txt">CANLI EKRAN</span>
+    </button>
+    <button class="nav-btn" data-tab="tab-files">
+      <span class="nav-ico">📁</span>
+      <span class="nav-txt">DOSYALAR</span>
+    </button>
+    <button class="nav-btn" data-tab="tab-terminal">
+      <span class="nav-ico">⌨️</span>
+      <span class="nav-txt">TERMİNAL</span>
+    </button>
+    <button class="nav-btn" data-tab="tab-settings">
+      <span class="nav-ico">📱</span>
+      <span class="nav-txt">BAĞLANTI</span>
+    </button>
+  </nav>
+
+  <!-- Toast Notification -->
+  <div id="hudToast" class="hud-toast"></div>
+
+  <script src="/app.js"></script>
+  <script src="/voiceprint.js"></script>
+</body>
+</html>

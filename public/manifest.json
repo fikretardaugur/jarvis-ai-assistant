@@ -1,0 +1,10 @@
+{
+  "name": "J.A.R.V.I.S. Mark VII — Stark OS",
+  "short_name": "JARVIS",
+  "description": "Tony Stark J.A.R.V.I.S. Uzaktan Bilgisayar Kontrol & Yapay Zeka Asistanı",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020710",
+  "theme_color": "#00f0ff",
+  "orientation": "portrait-primary"
+}

@@ -1,0 +1,16 @@
+{
+  "name": "jarvis-mark-vii",
+  "version": "1.0.0",
+  "description": "Tony Stark J.A.R.V.I.S. Mark VII - Telefon & Bilgisayar Tam Kontrol Sistemi",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "imapflow": "^2.12.1",
+    "mailparser": "^3.14.4",
+    "msedge-tts": "^2.1.1",
+    "nodemailer": "^10.6.0"
+  }
+}
